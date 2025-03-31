@@ -99,6 +99,30 @@ func handleLinkCreation(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintln(w, response)
 }
 
+func hourlyCleanup() {
+	ticker := time.NewTicker(30 * time.Minute)
+	defer ticker.Stop()
+
+	for {
+		select {
+		case <-ticker.C:
+			fmt.Println("Running database cleanup")
+			now := time.Now().Format("2006-01-02 15:04")
+			result, err := db.Exec("DELETE FROM records WHERE expiration_date < ?", now)
+			if err != nil {
+				fmt.Printf("Error during cleanup: %s\n", err.Error())
+				continue
+			}
+			rowsAffected, err := result.RowsAffected()
+			if err != nil {
+				fmt.Printf("Error during cleanup: %s\n", err.Error())
+				continue
+			}
+			fmt.Printf("Cleaned up %d records\n", rowsAffected)
+		}
+	}
+}
+
 func main() {
 	var err error
 	db, err = sql.Open("sqlite3", "./database.db")
@@ -116,6 +140,7 @@ func main() {
 		log.Printf("%q: %s\n", err, createStatement)
 		return
 	}
+	go hourlyCleanup()
 	r := mux.NewRouter()
 	r.HandleFunc("/create", handleLinkCreation).Methods("POST")
 	r.HandleFunc("/{short}", handleRedirection).Methods("GET")
