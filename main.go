@@ -44,9 +44,12 @@ func handleRedirection(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		if err == sql.ErrNoRows {
 			fmt.Printf("Found no matches!\n")
+			http.Error(w, "Short link not found", http.StatusNotFound)
+
 			return
 		}
 		fmt.Printf("Other error: %s\n", err.Error())
+		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
 	}
 	fmt.Printf("Found destination %s\n", destination)
@@ -142,7 +145,7 @@ func main() {
 	}
 	go hourlyCleanup()
 	r := mux.NewRouter()
-	r.HandleFunc("/create", handleLinkCreation).Methods("POST")
+	r.HandleFunc("/create", handleLinkCreation).Methods("POST", "GET")
 	r.HandleFunc("/{short}", handleRedirection).Methods("GET")
 
 	fmt.Println("Server running on http://localhost:8080")
