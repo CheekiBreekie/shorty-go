@@ -9,6 +9,7 @@ import (
 	"log"
 	"math/rand"
 	"net/http"
+	"strings"
 	"time"
 
 	"github.com/gorilla/mux"
@@ -21,7 +22,7 @@ type LinkCreationStruct struct {
 	Duration    int    `json:"duration_h"`
 }
 
-const charset = "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789"
+const charset = "abcdefghijkmnopqrstuvwxyzABCDEFGHJKLMNOPQRSTUVWXYZ0123456789" //without I and l
 
 var db *sql.DB
 
@@ -70,6 +71,9 @@ func handleRedirection(w http.ResponseWriter, r *http.Request) {
 		fmt.Printf("Other error: %s\n", err.Error())
 		http.Error(w, "Internal Server Error", http.StatusInternalServerError)
 		return
+	}
+	if !strings.HasPrefix(destination, "http://") && !strings.HasPrefix(destination, "https://") {
+		destination = "http://" + destination
 	}
 	fmt.Printf("Found destination %s\n", destination)
 	http.Redirect(w, r, destination, http.StatusFound)
