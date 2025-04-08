@@ -1,0 +1,36 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ .Title }}</title>
+</head>
+<body>
+    <h1>{{ .Heading }}</h1>
+    <form id="linkForm">
+        <label for="destination">Link:</label><br>
+        <input type="text" id="destination" name="destination" required><br><br>
+
+        <label for="duration">Expires after:</label><br>
+        <input type="text" id="duration" name="duration_h" required><br><br>
+
+        <button type="submit">Submit</button>
+    </form>
+</body>
+
+<script>
+document.getElementById("linkForm").addEventListener("submit", function(e) {
+    e.preventDefault();
+    const data = {
+        destination: document.getElementById("destination").value,
+        duration: parseInt(document.getElementById("duration").value)
+    };
+
+    fetch("/create", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(data)
+    })
+    .then(res => res.text())
+    .then(response => alert(response));
+});
+</script>

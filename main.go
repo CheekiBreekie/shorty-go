@@ -4,6 +4,7 @@ import (
 	"database/sql"
 	"encoding/json"
 	"fmt"
+	"html/template"
 	"io"
 	"log"
 	"math/rand"
@@ -31,6 +32,24 @@ func generateRandomString(length int) string {
 	}
 	return string(b)
 }
+
+func indexPageHandler(w http.ResponseWriter, r *http.Request) {
+	if r.Method != http.MethodGet {
+		http.Error(w, "Only GET is allowed", http.StatusMethodNotAllowed)
+		return
+	}
+	tmpl := template.Must(template.ParseFiles("templates/index.html"))
+	data := struct {
+		Title   string
+		Heading string
+	}{
+		Title:   "Index",
+		Heading: "Create short link",
+	}
+	tmpl.Execute(w, data)
+
+}
+
 func handleRedirection(w http.ResponseWriter, r *http.Request) {
 	if r.Method != http.MethodGet {
 		http.Error(w, "Only GET is allowed", http.StatusMethodNotAllowed)
@@ -145,6 +164,7 @@ func main() {
 	}
 	go hourlyCleanup()
 	r := mux.NewRouter()
+	r.HandleFunc("/index.html", indexPageHandler).Methods("GET")
 	r.HandleFunc("/create", handleLinkCreation).Methods("POST", "GET")
 	r.HandleFunc("/{short}", handleRedirection).Methods("GET")
 
